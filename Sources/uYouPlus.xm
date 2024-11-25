@@ -382,6 +382,13 @@ static NSMutableArray <YTIItemSectionRenderer *> *filteredArray(NSArray <YTIItem
     [newArray removeObjectsAtIndexes:removeIndexes];
     return newArray;
 }
+%hook _ASDisplayView
+- (void)didMoveToWindow {
+    %orig;
+    if (([self.accessibilityIdentifier isEqualToString:@"eml.expandable_metadata.vpp"]))
+        [self removeFromSuperview];
+}
+%end
 %hook YTInnerTubeCollectionViewController
 - (void)displaySectionsWithReloadingSectionControllerByRenderer:(id)renderer {
     NSMutableArray *sectionRenderers = [self valueForKey:@"_sectionRenderers"];
@@ -601,8 +608,10 @@ static NSMutableArray <YTIItemSectionRenderer *> *filteredArray(NSArray <YTIItem
 %hook YTHeaderLogoController
 - (void)setTopbarLogoRenderer:(YTITopbarLogoRenderer *)renderer {
     // Modify the type of the icon before setting the renderer
-    YTIIcon *icon = [%c(YTIIcon) new];
-    icon.iconType = YT_PREMIUM_LOGO; // magic number (537) for Premium icon, hopefully it doesnt change. 158 (YT_DEFAULT_LOGO) is default logo.
+    YTIIcon *icon = renderer.iconImage;
+    if (icon) {
+        icon.iconType = YT_PREMIUM_LOGO; // magic number (537) for Premium icon, hopefully it doesnt change. 158 (YT_DEFAULT_LOGO) is default logo.
+        }
     // Use this modified renderer
     %orig;
 }
